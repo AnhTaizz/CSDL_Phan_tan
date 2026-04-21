@@ -1,41 +1,29 @@
 -- ==========================================================
--- 1. TẠO DATABASE
+-- 1. Tạo database
 -- ==========================================================
 CREATE DATABASE QL_ChuoiNhaThuoc;
 GO
 USE QL_ChuoiNhaThuoc;
 GO
 
-
 -- ==========================================================
--- 2. TẠO CÁC BẢNG DANH MỤC ĐỘC LẬP (Không có khóa ngoại)
+-- 2. Tạo các bảng danh mục độc lập (Không khóa ngoại)
 -- ==========================================================
 
-
--- Bảng Khu Vực
-CREATE TABLE KhuVuc (
-    MaKV VARCHAR(10) PRIMARY KEY,
-    TenKV NVARCHAR(50) NOT NULL,
-    MoTa NVARCHAR(255)
-);
-
-
--- Bảng Nhóm Thuốc
+-- Bảng nhóm thuốc
 CREATE TABLE NhomThuoc (
     MaNhom VARCHAR(10) PRIMARY KEY,
     TenNhom NVARCHAR(100) NOT NULL
 );
 
-
--- Bảng Hoạt Chất
+-- Bảng hoạt chất
 CREATE TABLE HoatChat (
     MaHC VARCHAR(10) PRIMARY KEY,
     TenHC NVARCHAR(100) NOT NULL,
     ChongChiDinh NVARCHAR(500)
 );
 
-
--- Bảng Khách Hàng
+-- Bảng khách hàng
 CREATE TABLE KhachHang (
     MaKH VARCHAR(10) PRIMARY KEY,
     TenKH NVARCHAR(100) NOT NULL,
@@ -43,8 +31,7 @@ CREATE TABLE KhachHang (
     DiemTichLuy INT DEFAULT 0
 );
 
-
--- Bảng Bác Sĩ
+-- Bảng bác sĩ
 CREATE TABLE BacSi (
     MaBS VARCHAR(10) PRIMARY KEY,
     TenBS NVARCHAR(100) NOT NULL,
@@ -52,80 +39,71 @@ CREATE TABLE BacSi (
     ChungChiHanhNghe VARCHAR(50) UNIQUE
 );
 
-
 -- ==========================================================
--- 3. TẠO CÁC BẢNG PHỤ THUỘC LEVEL 1
+-- 3. Tạo các bảng phụ thuộc level 1
 -- ==========================================================
 
-
--- Bảng Chi Nhánh
+-- Bảng chi nhánh (Đã tích hợp KhuVuc)
 CREATE TABLE ChiNhanh (
     MaCN VARCHAR(10) PRIMARY KEY,
-    MaKV VARCHAR(10) NOT NULL,
     TenCN NVARCHAR(100) NOT NULL,
+    KhuVuc NVARCHAR(50) NOT NULL, 
     DiaChi NVARCHAR(255),
     SoDienThoai VARCHAR(15),
-    TrangThaiHoatDong BIT DEFAULT 1, -- 1: Đang hoạt động, 0: Đóng cửa
-    CONSTRAINT FK_ChiNhanh_KhuVuc FOREIGN KEY (MaKV) REFERENCES KhuVuc(MaKV)
+    TrangThaiHoatDong BIT DEFAULT 1
 );
 
-
--- Bảng Thuốc
+-- Bảng thuốc
 CREATE TABLE Thuoc (
     MaThuoc VARCHAR(10) PRIMARY KEY,
     MaNhom VARCHAR(10) NOT NULL,
     TenThuoc NVARCHAR(150) NOT NULL,
-    DonViTinh NVARCHAR(20) NOT NULL, -- Hộp, Vỉ, Viên, Lọ...
-    CanKeDon BIT DEFAULT 0, -- 0: OTC (Không kê đơn), 1: ETC (Kê đơn)
+    DonViTinh NVARCHAR(20) NOT NULL, 
+    CanKeDon BIT DEFAULT 0, 
     GiaNhap DECIMAL(18, 2) NOT NULL,
     GiaBanLe DECIMAL(18, 2) NOT NULL,
     NhaCungCap NVARCHAR(150),
     CONSTRAINT FK_Thuoc_NhomThuoc FOREIGN KEY (MaNhom) REFERENCES NhomThuoc(MaNhom)
 );
 
-
--- Bảng Nhân Viên
+-- Bảng nhân viên
 CREATE TABLE NhanVien (
     MaNV VARCHAR(10) PRIMARY KEY,
     MaCN VARCHAR(10) NOT NULL,
     TenNV NVARCHAR(100) NOT NULL,
-    ChucVu NVARCHAR(50), -- Dược sĩ, Cửa hàng trưởng...
+    ChucVu NVARCHAR(50), 
     LuongCoBan DECIMAL(18, 2),
     SoTaiKhoan VARCHAR(20),
-    MatKhauHash VARCHAR(255) NOT NULL, -- Mật khẩu mã hóa để login hệ thống
+    MatKhauHash VARCHAR(255) NOT NULL, 
     CONSTRAINT FK_NhanVien_ChiNhanh FOREIGN KEY (MaCN) REFERENCES ChiNhanh(MaCN)
 );
 
-
 -- ==========================================================
--- 4. TẠO CÁC BẢNG PHỤ THUỘC LEVEL 2 & CÁC BẢNG TRUNG GIAN
+-- 4. Tạo các bảng phụ thuộc level 2 & trung gian
 -- ==========================================================
 
-
--- Bảng Thành Phần Thuốc (Trung gian giữa Thuoc và HoatChat)
+-- Bảng thành phần thuốc 
 CREATE TABLE ThanhPhanThuoc (
     MaThuoc VARCHAR(10) NOT NULL,
     MaHC VARCHAR(10) NOT NULL,
-    HamLuong NVARCHAR(50) NOT NULL, -- VD: 500mg, 250ml
+    HamLuong NVARCHAR(50) NOT NULL, 
     PRIMARY KEY (MaThuoc, MaHC),
     CONSTRAINT FK_TPT_Thuoc FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc),
     CONSTRAINT FK_TPT_HoatChat FOREIGN KEY (MaHC) REFERENCES HoatChat(MaHC)
 );
 
-
--- Bảng Lô Thuốc
+-- Bảng lô thuốc
 CREATE TABLE LoThuoc (
     MaLo VARCHAR(20) PRIMARY KEY,
     MaThuoc VARCHAR(10) NOT NULL,
-    SoLoSX VARCHAR(50) NOT NULL, -- Mã lô in trên vỏ hộp từ nhà máy
+    SoLoSX VARCHAR(50) NOT NULL, 
     NgaySanXuat DATE NOT NULL,
     HanSuDung DATE NOT NULL,
     CONSTRAINT FK_LoThuoc_Thuoc FOREIGN KEY (MaThuoc) REFERENCES Thuoc(MaThuoc),
-    CONSTRAINT CHK_HanSuDung CHECK (HanSuDung > NgaySanXuat) -- HSD phải lớn hơn NSX
+    CONSTRAINT CHK_HanSuDung CHECK (HanSuDung > NgaySanXuat) 
 );
 
-
--- Bảng Tồn Kho (Trung gian giữa ChiNhanh và LoThuoc)
+-- Bảng tồn kho 
 CREATE TABLE TonKho (
     MaCN VARCHAR(10) NOT NULL,
     MaLo VARCHAR(20) NOT NULL,
@@ -133,16 +111,14 @@ CREATE TABLE TonKho (
     PRIMARY KEY (MaCN, MaLo),
     CONSTRAINT FK_TonKho_ChiNhanh FOREIGN KEY (MaCN) REFERENCES ChiNhanh(MaCN),
     CONSTRAINT FK_TonKho_LoThuoc FOREIGN KEY (MaLo) REFERENCES LoThuoc(MaLo),
-    CONSTRAINT CHK_SoLuongTon CHECK (SoLuongTon >= 0) -- Không cho phép tồn kho âm
+    CONSTRAINT CHK_SoLuongTon CHECK (SoLuongTon >= 0) 
 );
 
-
 -- ==========================================================
--- 5. TẠO CÁC BẢNG NGHIỆP VỤ NHẬP / XUẤT HÀNG
+-- 5. Tạo các bảng nghiệp vụ nhập / xuất hàng
 -- ==========================================================
 
-
--- Bảng Phiếu Nhập Kho
+-- Bảng phiếu nhập kho (Chuẩn hóa 1-N với Chi Nhánh)
 CREATE TABLE PhieuNhapKho (
     MaPhieuNhap VARCHAR(20) PRIMARY KEY,
     MaCN VARCHAR(10) NOT NULL,
@@ -151,8 +127,7 @@ CREATE TABLE PhieuNhapKho (
     CONSTRAINT FK_PhieuNhap_ChiNhanh FOREIGN KEY (MaCN) REFERENCES ChiNhanh(MaCN)
 );
 
-
--- Bảng Chi Tiết Nhập Kho
+-- Bảng chi tiết nhập kho
 CREATE TABLE ChiTietNhapKho (
     MaPhieuNhap VARCHAR(20) NOT NULL,
     MaLo VARCHAR(20) NOT NULL,
@@ -164,14 +139,13 @@ CREATE TABLE ChiTietNhapKho (
     CONSTRAINT CHK_SoLuongNhap CHECK (SoLuongNhap > 0)
 );
 
-
--- Bảng Hóa Đơn (Bán hàng)
+-- Bảng hóa đơn
 CREATE TABLE HoaDon (
     MaHD VARCHAR(20) PRIMARY KEY,
     MaCN VARCHAR(10) NOT NULL,
     MaNV VARCHAR(10) NOT NULL,
-    MaKH VARCHAR(10) NULL, -- Khách vãng lai không cần nhập mã
-    MaBS VARCHAR(10) NULL, -- Chỉ cần khi bán thuốc ETC (kê đơn)
+    MaKH VARCHAR(10) NULL, 
+    MaBS VARCHAR(10) NULL, 
     NgayTao DATETIME DEFAULT GETDATE(),
     TongTien DECIMAL(18, 2) DEFAULT 0,
     PhuongThucThanhToan NVARCHAR(50) DEFAULT N'Tiền mặt',
@@ -181,13 +155,12 @@ CREATE TABLE HoaDon (
     CONSTRAINT FK_HoaDon_BacSi FOREIGN KEY (MaBS) REFERENCES BacSi(MaBS)
 );
 
-
--- Bảng Chi Tiết Hóa Đơn
+-- Bảng chi tiết hóa đơn
 CREATE TABLE ChiTietHoaDon (
     MaHD VARCHAR(20) NOT NULL,
-    MaLo VARCHAR(20) NOT NULL, -- Bán chính xác lô nào để trừ tồn kho lô đó
+    MaLo VARCHAR(20) NOT NULL, 
     SoLuong INT NOT NULL,
-    DonGiaBan DECIMAL(18, 2) NOT NULL, -- Lưu cứng giá tại thời điểm bán
+    DonGiaBan DECIMAL(18, 2) NOT NULL, 
     PRIMARY KEY (MaHD, MaLo),
     CONSTRAINT FK_CTHD_HoaDon FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
     CONSTRAINT FK_CTHD_LoThuoc FOREIGN KEY (MaLo) REFERENCES LoThuoc(MaLo),
