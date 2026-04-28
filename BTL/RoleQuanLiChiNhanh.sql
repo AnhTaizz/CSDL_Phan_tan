@@ -1,0 +1,28 @@
+USE QL_ChuoiNhaThuoc_CN_HN;
+GO
+CREATE LOGIN Login_QuanLy_HN WITH PASSWORD = '123456';
+CREATE USER User_QuanLy_HN FOR LOGIN Login_QuanLy_HN;
+GO
+
+CREATE ROLE Role_QuanLyChiNhanh;
+GO
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON KhachHang TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON HoaDon TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ChiTietHoaDon TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON NhanVien TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TonKho TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON PhieuNhapKho TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ChiTietNhapKho TO Role_QuanLyChiNhanh;
+GRANT SELECT, INSERT, UPDATE, DELETE ON LoThuoc TO Role_QuanLyChiNhanh;
+
+GRANT SELECT ON NhomThuoc TO Role_QuanLyChiNhanh;
+GRANT SELECT ON HoatChat TO Role_QuanLyChiNhanh;
+GRANT SELECT ON NhaCungCap TO Role_QuanLyChiNhanh;
+GRANT SELECT ON BacSi TO Role_QuanLyChiNhanh;
+GRANT SELECT ON ChiNhanh TO Role_QuanLyChiNhanh;
+GRANT SELECT ON Thuoc TO Role_QuanLyChiNhanh;
+GRANT SELECT ON ThanhPhanThuoc TO Role_QuanLyChiNhanh;
+
+ALTER ROLE Role_QuanLyChiNhanh ADD MEMBER User_QuanLy_HN;
+GO

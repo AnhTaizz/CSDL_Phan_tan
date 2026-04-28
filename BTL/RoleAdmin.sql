@@ -1,0 +1,8 @@
+USE QL_ChuoiNhaThuoc;
+GO
+CREATE LOGIN Login_Admin WITH PASSWORD = '123456';
+CREATE USER User_Admin FOR LOGIN Login_Admin;
+GO
+
+ALTER ROLE db_owner ADD MEMBER User_Admin;
+GO
